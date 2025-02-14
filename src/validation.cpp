@@ -8,6 +8,7 @@
 #include <validation.h>
 
 #include <arith_uint256.h>
+#include <auxcheckpoints.h>
 #include <auxpow.h>
 #include <chain.h>
 #include <checkqueue.h>
@@ -2955,6 +2956,9 @@ void Chainstate::UpdateTip(const CBlockIndex* pindexNew)
     }
     UpdateTipLog(coins_tip, pindexNew, params, __func__, "",
                  util::Join(warning_messages, Untranslated(", ")).original);
+
+    CheckAuxCheckpoint(pindexNew, m_blockman, params.GetConsensus());
+    TrimAuxCheckpoint(pindexNew->nHeight, params.GetConsensus());
 }
 
 /** Disconnect m_chain's tip.

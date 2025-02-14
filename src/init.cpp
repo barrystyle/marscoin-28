@@ -10,6 +10,7 @@
 #include <kernel/checks.h>
 
 #include <addrman.h>
+#include <auxcheckpoints.h>
 #include <banman.h>
 #include <blockfilter.h>
 #include <chain.h>
@@ -2011,6 +2012,17 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     }, DUMP_BANS_INTERVAL);
 
     if (node.peerman) node.peerman->StartScheduledTasks(scheduler);
+
+    // Initialize auxpow checkpoints
+    {
+        LOCK(cs_main);
+        CBlockIndex *pindex = chainman.ActiveTip();
+        const Consensus::Params& params = Params().GetConsensus();
+        while (pindex->nHeight > params.nAuxpowStartHeight) {
+            CheckAuxCheckpoint(pindex, chainman.m_blockman, params);
+            pindex = pindex->pprev;
+        }
+    }
 
 #if HAVE_SYSTEM
     StartupNotify(args);
