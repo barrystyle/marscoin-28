@@ -117,6 +117,7 @@ endif
 BITCOIN_CORE_H = \
   addresstype.h \
   auxpow.h \
+  auxcheckpoints.h \
   addrdb.h \
   addrman.h \
   addrman_impl.h \
@@ -457,6 +458,7 @@ libmarscoin_node_a_SOURCES = \
   policy/truc_policy.cpp \
   pow.cpp \
   rest.cpp \
+  rpc/auxcheckpoints.cpp \
   rpc/auxpow_miner.cpp \
   rpc/blockchain.cpp \
   rpc/fees.cpp \
@@ -686,6 +688,7 @@ libmarscoin_common_a_CXXFLAGS = $(AM_CXXFLAGS) $(PIE_FLAGS)
 libmarscoin_common_a_SOURCES = \
   addresstype.cpp \
   auxpow.cpp \
+  auxcheckpoints.cpp \
   base58.cpp \
   bech32.cpp \
   chainparamsbase.cpp \
