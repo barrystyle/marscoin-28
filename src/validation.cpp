@@ -8,6 +8,7 @@
 #include <validation.h>
 
 #include <arith_uint256.h>
+#include <auxcheckpoints.h>
 #include <auxpow.h>
 #include <chain.h>
 #include <checkqueue.h>
@@ -2955,6 +2956,9 @@ void Chainstate::UpdateTip(const CBlockIndex* pindexNew)
     }
     UpdateTipLog(coins_tip, pindexNew, params, __func__, "",
                  util::Join(warning_messages, Untranslated(", ")).original);
+
+    CheckAuxCheckpoint(pindexNew, m_blockman, params.GetConsensus());
+    TrimAuxCheckpoint(pindexNew->nHeight, params.GetConsensus());
 }
 
 /** Disconnect m_chain's tip.
@@ -4134,6 +4138,16 @@ static bool ContextualCheckBlockHeader(const CBlockHeader& block, BlockValidatio
         if (pcheckpoint && nHeight < pcheckpoint->nHeight) {
             LogPrintf("ERROR: %s: forked chain older than last checkpoint (height %d)\n", __func__, nHeight);
             return state.Invalid(BlockValidationResult::BLOCK_CHECKPOINT, "bad-fork-prior-to-checkpoint");
+        }
+    }
+
+    // Check against auxcheckpoints
+    if (AreAuxCheckpointsActive(nHeight, consensusParams)) {
+        // Don't accept any forks from the main chain prior to last auxcheckpoint.
+        AuxCheckPoint bestCheckpoint = GetBestAuxCheckpoint();
+        if (nHeight < bestCheckpoint.height) {
+            LogPrintf("ERROR: %s: forked chain older than last auxcheckpoint (height %d)\n", __func__, nHeight);
+            return state.Invalid(BlockValidationResult::BLOCK_CHECKPOINT, "bad-fork-prior-to-auxcheckpoint");
         }
     }
 
