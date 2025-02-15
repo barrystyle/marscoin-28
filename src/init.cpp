@@ -2014,13 +2014,24 @@ bool AppInitMain(NodeContext& node, interfaces::BlockAndHeaderTipInfo* tip_info)
     if (node.peerman) node.peerman->StartScheduledTasks(scheduler);
 
     // Initialize auxpow checkpoints
+    const int bestHeight = chainman.ActiveTip()->nHeight;
+    const Consensus::Params& params = Params().GetConsensus();
+
+    if (AreAuxCheckpointsActive(bestHeight, params))
     {
         LOCK(cs_main);
         CBlockIndex *pindex = chainman.ActiveTip();
-        const Consensus::Params& params = Params().GetConsensus();
+
+        //rollback and collect all auxes
         while (pindex->nHeight > params.nAuxpowStartHeight) {
             CheckAuxCheckpoint(pindex, chainman.m_blockman, params);
             pindex = pindex->pprev;
+        }
+
+        //rollforward while trimming
+        int currentHeight = pindex->nHeight;
+        while (currentHeight <= bestHeight) {
+            TrimAuxCheckpoint(currentHeight++, params);
         }
     }
 
